@@ -3,7 +3,8 @@ export default class News {
     this.parentElement = element;
     this.buttonReload = this.parentElement.querySelector('.news_reload');
     this.newsListElement = this.parentElement.querySelector('.news_list');
-    this.url = 'https://news-with-workers.herokuapp.com/';
+    this.url = 'https://stanislavsus-service-worker.herokuapp.com/';
+    // this.url = 'http://localhost:7097/';
   }
 
   init() {
@@ -11,23 +12,30 @@ export default class News {
     this.buttonReload.addEventListener('click', () => this.requestNews());
   }
 
-  requestNews() {
-    const xhr = new XMLHttpRequest();
-    xhr.open('GET', `${this.url}news/`);
-    xhr.addEventListener('load', () => {
-      if (xhr.status === 200) {
-        const newsList = [];
-        for (const news of JSON.parse(xhr.response)) {
-          newsList.push(this.addNews(news));
-        }
-        this.reloadNews(newsList);
-      } else {
-        this.disconnect();
-      }
-    });
-    xhr.addEventListener('error', () => this.disconnect());
+  async requestNews() {
     this.preloader();
-    xhr.send();
+    const res = await fetch(`${this.url}news`)
+    const result = await res.json()
+    const newsList = [];
+    for (const news of result) {
+      newsList.push(this.addNews(news));
+    }
+    this.reloadNews(newsList);
+    // const xhr = new XMLHttpRequest();
+    // xhr.open('GET', `${this.url}news`);
+    // xhr.addEventListener('load', () => {
+    //   if (xhr.status === 200) {
+    //     const newsList = [];
+    //     for (const news of JSON.parse(xhr.response)) {
+    //       newsList.push(this.addNews(news));
+    //     }
+    //     this.reloadNews(newsList);
+    //   } else {
+    //     this.disconnect();
+    //   }
+    // });
+    // xhr.addEventListener('error', () => this.disconnect());
+    // xhr.send();
   }
 
   // eslint-disable-next-line class-methods-use-this
@@ -77,12 +85,5 @@ export default class News {
       const preloaderElement = newsElement.cloneNode(true);
       this.newsListElement.append(preloaderElement);
     }
-  }
-
-  disconnect() {
-    const disconnectElement = document.createElement('div');
-    disconnectElement.classList.add('news_disconnect');
-    disconnectElement.innerHTML = 'Не удалось загрузить данные<br>Проверьте подключение и обновите страницу';
-    this.parentElement.append(disconnectElement);
   }
 }
